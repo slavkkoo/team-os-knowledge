@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# Team OS pre-commit: (1) frontmatter guard, (2) brain drift checker.
+# Подключение: git config core.hooksPath .githooks   (или scripts/setup.sh)
+# Совместим с bash 3.2 (macOS). Осознанный обход: git commit --no-verify
+set -u
+repo="$(git rev-parse --show-toplevel)"
+cd "$repo" || exit 1
+
+# Локальные настройки (CODE_ROOT, DRIFT_STRICT) — из .env, если он есть.
+# .env в git не попадает (см. .gitignore), шаблон — .env.example.
+if [ -f "$repo/.env" ]; then
+  set -a
+  # shellcheck disable=SC1091
+  . "$repo/.env"
+  set +a
+fi
+
+# 1. Frontmatter у staged .md (исключения — в scripts/check-frontmatter.sh)
+checker="$repo/scripts/check-frontmatter.sh"
+if [ -f "$checker" ]; then
+  if [ -n "$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.md$' || true)" ]; then
+    echo "Team OS: frontmatter"
+    bash "$checker" --staged || {
+      echo ""
+      echo "Коммит отклонён: нет корректного frontmatter (owner / tier / last_reviewed)."
+      echo "Формат — в шапке scripts/check-frontmatter.sh."
+      exit 1
+    }
+  fi
+fi
+
+# 2. Drift-чекер: доки brain против кода (если brain есть)
+if [ -f "$repo/brain/scripts/check_drift.py" ]; then
+  if ! command -v python3 >/dev/null 2>&1; then
+    echo "Коммит отклонён: для drift-чекера нужен python3 (3.11+)."
+    exit 1
+  fi
+  echo "Team OS: drift-чекер"
+  python3 "$repo/brain/scripts/check_drift.py"
+  rc=$?
+  if [ $rc -ne 0 ]; then
+    echo ""
+    if [ $rc -eq 2 ]; then
+      echo "Коммит отклонён: DRIFT_STRICT=1, а код не найден (SKIPPED)."
+      echo "Выкачай код в CODE_ROOT или сними DRIFT_STRICT."
+    else
+      echo "Коммит отклонён: доки разошлись с кодом (см. FAIL выше)."
+      echo "Допиши значения в док из FAIL или обнови клейм в brain/claims.yaml."
+      echo "Перед выводами сделай git pull в CODE_ROOT: устаревший клон врёт."
+    fi
+    exit 1
+  fi
+fi
+exit 0

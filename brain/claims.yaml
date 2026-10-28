@@ -1,0 +1,51 @@
+# claims.yaml — каждое значение в списке ниже это обещание, которое доки дают о коде.
+# owner: dev-lead | tier: evolving | last_reviewed: 2026-10-28
+#
+# КОНТРАКТ ЧЕКЕРА. Этот файл — спецификация, brain/scripts/check_drift.py — одна
+# из реализаций. Чекер можно переписать на любом языке, если он соблюдает правила:
+#
+#   enum-values   секция дока между <!-- claim:ID --> и <!-- /claim:ID --> обязана
+#                 содержать КАЖДОЕ значение, которое определяет код. Значения
+#                 достаёт extract:
+#                   const-prefix:<P>   строковые значения констант с префиксом P
+#                                      (STATUS_X = "x", const STATUS_X = 'x', STATUS_X: "x")
+#                   files-in-dir:<ext> имена файлов каталога без расширения
+#                                      (кроме начинающихся с _, Abstract, Base)
+#                 Значения нет в доке -> FAIL (ловим тихое гниение код -> док).
+#                 Лишнее значение в доке -> WARN (коммит не падает, почистить).
+#   pointer-only  секция дока упоминает symbol И path; path существует в коде,
+#                 symbol встречается в файле. Списки значений сознательно не копируем.
+#   symbol-exists путь source.path существует; если задан symbol — он есть в файле.
+#
+#   Код не выкачан (нет CODE_ROOT или подкаталога repo) -> SKIPPED с перечислением.
+#   Никогда не FAIL и никогда не «verified»: в итоге пишем «skipped».
+#   Код на месте, а source.path исчез -> FAIL (код переехал — клейм надо обновить).
+#   Любой FAIL -> exit 1 со списком «код говорит / в доке нет».
+#   --strict или DRIFT_STRICT=1: SKIPPED -> exit 2 (для CI, где код обязан быть).
+#
+# ГДЕ КОД (первое заданное побеждает): --code-root, env CODE_ROOT, code_root ниже.
+# Путь относительный — от корня репо знаний. Несколько репо: CODE_ROOT указывает
+# на каталог с клонами, а source.repo — имя подкаталога клона.
+#
+# ФОРМАТ: source пишется одной строкой { key: value, ... }, без запятых в значениях.
+#
+# Демо ниже смотрит в examples/demo-code. Подключив свой код — замените
+# code_root и клеймы, а examples/ удалите.
+
+code_root: examples/demo-code
+
+claims:
+  - id: booking-status-values
+    doc: brain/product/object-model.md
+    type: enum-values
+    source: { path: booking/status.py, extract: const-prefix:STATUS_ }
+
+  - id: notification-channels
+    doc: brain/product/object-model.md
+    type: enum-values
+    source: { path: notifications/channels, extract: files-in-dir:.py }
+
+  - id: booking-model-pointer
+    doc: brain/product/object-model.md
+    type: pointer-only
+    source: { path: booking/models.py, symbol: Booking }

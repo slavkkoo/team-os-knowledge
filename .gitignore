@@ -1,0 +1,32 @@
+# Секреты и локальные настройки
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.session
+*.session-journal
+
+# Рантайм агента (если клонируете репо рядом с агентом)
+memory/
+logs/
+run/
+*_run/
+
+# Дампы и выгрузки — сырые данные клиентов в репо не кладём
+*.dump
+*.sql
+*.sql.gz
+*.csv
+*.xlsx
+dumps/
+exports/
+
+# Локальное Claude Code (симлинки скиллов создаёт scripts/setup.sh)
+.claude/settings.local.json
+
+# Мусор
+.DS_Store
+__pycache__/
+*.pyc
+*.bak
