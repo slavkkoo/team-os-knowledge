@@ -12,7 +12,6 @@ Code, Codex или бот в чате — и отвечают с цитатой 
 
 Структура извлечена из прод-системы автора и обезличена. Все примеры — выдуманный
 сервис онлайн-записи **Acme**: при наполнении замените их своими.
-Методика и часть шаблонов — Team OS Toolkit (MIT), автор Bayram Annakov: https://github.com/BayramAnnakov/team-os-toolkit
 
 ## Три слоя + агент
 
@@ -232,3 +231,7 @@ ok       booking-model-pointer
   ассистент владельца: утренний брифинг по почте, календарю и чатам.
 
 Установка — [`INSTALL.md`](INSTALL.md). Лицензия — MIT, см. [`LICENSE`](LICENSE).
+
+## Основа
+
+Методика и часть шаблонов — [Team OS Toolkit](https://github.com/BayramAnnakov/team-os-toolkit) (MIT), автор Bayram Annakov.
